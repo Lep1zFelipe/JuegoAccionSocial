@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reto Naranja — El Tablero de la Economía Creativa</title>
+<style>
+:root{
+  --paper: #EDE6D6;
+  --paper-dark: #E3DAC5;
+  --ink: #1C1A17;
+  --ink-soft: #3A362F;
+  --orange: #E8622C;
+  --orange-deep: #C74A1C;
+
+  --sector-cine: #7A3B2E;
+  --sector-musica: #C9A227;
+  --sector-diseno: #B23A6B;
+  --sector-videojuegos: #4B5FA3;
+
+  --line: rgba(28,26,23,0.16);
+  --line-strong: rgba(28,26,23,0.35);
+
+  --font-display: 'Arial Narrow', 'Helvetica Neue Condensed', 'Oswald', Impact, 'Franklin Gothic Bold', sans-serif;
+  --font-body: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Consolas', 'Menlo', 'Courier New', monospace;
+
+  --shadow-card: 0 2px 0 var(--ink), 0 2px 6px rgba(28,26,23,0.15);
+  --shadow-pop: 0 4px 0 var(--ink), 0 8px 16px rgba(28,26,23,0.25);
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+body{
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  padding: 20px;
+  background-image:
+    radial-gradient(circle at 8% 12%, rgba(232,98,44,0.06) 0, transparent 45%),
+    radial-gradient(circle at 92% 85%, rgba(75,95,163,0.06) 0, transparent 45%),
+    repeating-linear-gradient(0deg, rgba(28,26,23,0.015) 0px, rgba(28,26,23,0.015) 1px, transparent 1px, transparent 3px);
+}
+
+.app-shell{ max-width: 1400px; margin: 0 auto; }
+
+/* ===== Masthead ===== */
+.masthead{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap: 20px; border-bottom: 4px solid var(--ink);
+  padding-bottom: 14px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.masthead-title{
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(2rem, 4.5vw, 3.6rem); line-height: 0.85;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  -webkit-text-stroke: 0.5px var(--ink);
+}
+.masthead-title .accent{ color: var(--orange); }
+.masthead-sub{
+  font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--ink-soft); margin-top: 4px;
+}
+.masthead-right{ display:flex; align-items:center; gap:14px; }
+.masthead-tag{
+  font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.1em; border: 2px solid var(--ink); padding: 6px 10px;
+  background: var(--orange); color: var(--paper); transform: rotate(-1.5deg); white-space: nowrap;
+}
+.timer-display{
+  font-family: var(--font-mono); font-weight:800; font-size: 1.4rem;
+  border: 2px solid var(--ink); padding: 6px 14px; background: var(--paper);
+  box-shadow: var(--shadow-card);
+}
+.timer-display.timer-warning{ color: var(--paper); background: var(--orange-deep); animation: pulse 1s infinite; }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+
+/* ===== Layout ===== */
+.game-layout{
+  display:grid; grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-rows: 1fr; gap: 20px; align-items:stretch;
+  height: calc(100vh - 194px); min-height: 560px;
+}
+@media (max-width: 1100px){ .game-layout{ grid-template-columns: 1fr; height:auto; } }
+
+.screen{ display:none; }
+.screen.active{ display:block; }
+
+/* ===== Buttons ===== */
+.btn{
+  font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; font-size: 0.8rem; border: 2px solid var(--ink);
+  background: var(--paper); color: var(--ink); padding: 12px 18px; cursor: pointer;
+  box-shadow: var(--shadow-card); transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.btn:hover{ transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink), 3px 5px 10px rgba(28,26,23,0.2); }
+.btn:active{ transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:disabled{ opacity:0.4; cursor:not-allowed; box-shadow:none; transform:none; }
+.btn-primary{ background: var(--orange); color: var(--paper); border-color: var(--ink); }
+.btn-block{ width:100%; }
+
+/* ===== Setup screen ===== */
+.setup-card{
+  background: var(--paper); border: 3px solid var(--ink); box-shadow: var(--shadow-pop);
+  max-width: 640px; margin: 40px auto; padding: 32px;
+}
+.setup-intro{
+  font-size:0.85rem; color: var(--ink-soft); line-height:1.5; margin-bottom:22px;
+  border-left: 3px solid var(--orange); padding-left: 12px;
+}
+.setup-section-label{
+  font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--ink-soft); margin-bottom: 10px; display:block;
+  border-bottom: 2px solid var(--line); padding-bottom: 6px;
+}
+.player-row{ display:flex; gap:10px; align-items:center; margin-bottom: 10px; }
+.player-row input[type=text]{
+  flex:1; font-family: var(--font-body); font-weight:600; font-size: 0.95rem;
+  padding: 10px 12px; border: 2px solid var(--ink); background: #fff; color: var(--ink);
+}
+.player-row input[type=text]:focus{ outline: 3px solid var(--orange); outline-offset: 1px; }
+.token-swatch{ width: 34px; height:34px; border: 2px solid var(--ink); border-radius:50%; cursor:pointer; flex-shrink:0; position:relative; }
+.token-swatch.selected::after{ content:''; position:absolute; inset:-5px; border: 2px solid var(--ink); border-radius:50%; }
+.player-count-row{ display:flex; gap:8px; margin-bottom:20px; }
+.count-btn{
+  flex:1; font-family: var(--font-mono); font-weight:700; border: 2px solid var(--ink);
+  background: var(--paper); padding: 10px; cursor:pointer; font-size:0.85rem;
+}
+.count-btn.active{ background: var(--ink); color: var(--paper); }
+
+/* ===== Board ===== */
+.board-wrap{
+  background: var(--paper); border: 3px solid var(--ink); box-shadow: var(--shadow-pop);
+  padding: 12px; display:flex; justify-content:center; align-items:center;
+  height: 100%; min-height:0; overflow: hidden;
+}
+.board{
+  display:grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(9, 1fr);
+  aspect-ratio: 1; height:100%; width:auto; max-width:100%; gap:2px;
+  background: var(--ink); border: 2px solid var(--ink);
+}
+@media (max-width: 1100px){ .board-wrap{ height:auto; } .board{ height:auto; width:100%; } }
+.board-center{
+  grid-column: 2 / 9; grid-row: 2 / 9; background: var(--paper-dark);
+  position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+.board-center-logo{ font-family: var(--font-display); text-align:center; transform: rotate(-6deg); color: var(--ink); opacity:0.9; line-height:0.9; }
+.board-center-logo .big{ font-size: clamp(1.6rem, 3.6vw, 3.2rem); font-weight: 800; color: var(--orange); display:block; -webkit-text-stroke: 0.6px var(--ink); }
+.board-center-logo .small{ font-family: var(--font-mono); font-size: 0.7rem; letter-spacing:0.15em; text-transform:uppercase; display:block; margin-top:6px; color: var(--ink-soft); }
+.board-center-deco{ position:absolute; inset:0; opacity:0.5; pointer-events:none; }
+
+.cell{
+  background: var(--paper); position:relative; overflow:hidden; display:flex;
+  flex-direction:column; font-family: var(--font-mono); cursor:pointer;
+}
+.cell:hover{ filter:brightness(0.96); }
+.cell-color-bar{ height: 16%; width:100%; flex-shrink:0; }
+.cell-body{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding: 2px 3px; gap:2px; }
+.cell-name{ font-family: var(--font-body); font-weight:700; font-size: 0.5rem; line-height:1.05; text-transform:uppercase; letter-spacing:0.01em; }
+.cell-icon{ font-size: 0.9rem; line-height:1; }
+.cell.corner{ align-items:center; justify-content:center; }
+.cell.corner .cell-body{ justify-content:center; }
+.cell.corner .cell-name{ font-size: 0.62rem; }
+
+.token-stack{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  gap:3px; flex-wrap:wrap; pointer-events:none; z-index:2;
+}
+.token-dot{ width: 24px; height:24px; border-radius:50%; border: 2px solid var(--ink); box-shadow: 0 2px 4px rgba(0,0,0,0.4); flex-shrink:0; }
+
+.cell.row-top{ flex-direction:column; }
+.cell.row-bottom{ flex-direction:column-reverse; }
+.cell.row-left{ flex-direction:row-reverse; }
+.cell.row-left .cell-color-bar{ height:100%; width:16%; }
+.cell.row-left .cell-body{ writing-mode: vertical-rl; text-orientation:mixed; }
+.cell.row-right{ flex-direction:row; }
+.cell.row-right .cell-color-bar{ height:100%; width:16%; }
+.cell.row-right .cell-body{ writing-mode: vertical-rl; text-orientation:mixed; transform:rotate(180deg); }
+
+/* ===== Side panel ===== */
+.panel{ display:flex; flex-direction:column; gap:14px; height:100%; min-height:0; overflow-y:auto; }
+.panel-card{ background: var(--paper); border: 3px solid var(--ink); box-shadow: var(--shadow-card); padding: 16px; }
+.panel-title{
+  font-family: var(--font-mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.12em;
+  color: var(--ink-soft); border-bottom: 2px solid var(--line); padding-bottom:8px; margin-bottom:10px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.pot-value{ color: var(--orange-deep); font-weight:800; }
+
+.player-card{
+  border: 2px solid var(--ink); padding: 10px 12px; margin-bottom:8px;
+  display:flex; align-items:center; gap:10px; background:#fff; position:relative;
+}
+.player-card.current{ background: var(--orange); color: var(--paper); }
+.player-card .p-token{ width:22px;height:22px;border-radius:50%; border:2px solid var(--ink); flex-shrink:0; }
+.player-card .p-info{ flex:1; min-width:0; }
+.player-card .p-name{ font-weight:800; font-size:0.85rem; }
+.player-card .p-cash{ font-family: var(--font-mono); font-size:0.78rem; }
+
+.dice-area{ display:flex; align-items:center; justify-content:center; gap:14px; padding: 10px 0 16px; }
+.die{ width:52px; height:52px; background:#fff; border:2.5px solid var(--ink); display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); padding:7px; box-shadow: 2px 2px 0 var(--ink); }
+.die.rolling{ animation: dieroll 0.5s ease; }
+@keyframes dieroll{ 0%{ transform:rotate(0deg); } 30%{ transform:rotate(120deg) scale(1.1); } 60%{ transform:rotate(240deg) scale(0.95); } 100%{ transform:rotate(360deg); } }
+.pip{ width:8px; height:8px; border-radius:50%; background:var(--ink); align-self:center; justify-self:center; opacity:0; }
+.pip.on{ opacity:1; }
+
+.action-row{ display:flex; flex-direction:column; gap:8px; }
+
+.log-box{
+  height: 150px; overflow-y:auto; font-family: var(--font-mono); font-size: 0.72rem; line-height:1.5;
+  display:flex; flex-direction:column-reverse; border: 2px solid var(--line); padding: 8px; background: #fff;
+}
+.log-line{ padding:2px 0; border-bottom:1px dotted var(--line); }
+.log-line:last-child{ border-bottom:none; }
+.log-line .log-p{ font-weight:700; }
+
+/* ===== Modal ===== */
+.modal-backdrop{ position:fixed; inset:0; background: rgba(28,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index: 100; padding: 20px; }
+.modal-backdrop.hidden{ display:none; }
+.modal{ background: var(--paper); border: 3px solid var(--ink); box-shadow: var(--shadow-pop); max-width: 460px; width:100%; padding: 26px; position:relative; animation: modalpop 0.18s ease; max-height: 88vh; overflow-y:auto; }
+@keyframes modalpop{ from{ transform: scale(0.94) translateY(6px); opacity:0; } to{ transform: scale(1) translateY(0); opacity:1; } }
+.modal-eyebrow{ font-family: var(--font-mono); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.14em; margin-bottom: 6px; }
+.modal-title{ font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; text-transform:uppercase; line-height:1.15; margin-bottom: 14px; }
+.modal-body{ font-size:0.92rem; line-height:1.5; margin-bottom:18px; color: var(--ink-soft); }
+.modal-stats{ display:flex; flex-direction:column; gap:6px; font-family: var(--font-mono); font-size:0.8rem; margin-bottom:18px; padding: 10px; background: rgba(28,26,23,0.04); border: 1px solid var(--line); }
+.modal-stats .row{ display:flex; justify-content:space-between; }
+.modal-actions{ display:flex; gap:10px; }
+.modal-actions .btn{ flex:1; }
+
+.card-face{ border: 3px solid var(--ink); padding: 24px; text-align:center; position:relative; overflow:hidden; }
+.card-face::before{ content:''; position:absolute; inset:0; background-image: repeating-linear-gradient(45deg, rgba(28,26,23,0.03) 0px, rgba(28,26,23,0.03) 2px, transparent 2px, transparent 10px); pointer-events:none; }
+.card-face-icon{ font-size:2.4rem; margin-bottom:10px; }
+.card-face-eyebrow{ font-family: var(--font-mono); font-size:0.65rem; text-transform:uppercase; letter-spacing:0.16em; }
+.card-face-text{ font-family: var(--font-body); font-weight:700; font-size:1.05rem; margin-top:12px; line-height:1.35; }
+
+.sector-tag{ display:inline-block; font-family: var(--font-mono); font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; padding:3px 8px; color: var(--paper); margin-bottom:8px; }
+
+.rating-options{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-top:6px; }
+.rating-option-btn{ font-size:0.95rem; padding:14px 4px; }
+
+.challenge-timer, .rating-timer{
+  font-family: var(--font-mono); font-weight:800; font-size:1.3rem;
+  margin-top:14px; color: var(--orange-deep);
+}
+.challenge-timer-up{ color: var(--ink); }
+
+.winner-pick-btn{ text-align:left; }
+
+/* ===== Winner screen ===== */
+.winner-screen{ text-align:center; padding: 40px 20px; }
+.winner-screen .trophy{ font-size:4.5rem; margin-bottom:6px; }
+.winner-screen h1{ font-family: var(--font-display); font-size: clamp(2rem,5.5vw,3.4rem); text-transform:uppercase; color: var(--orange); }
+.ranking-box{ max-width: 460px; margin: 30px auto 0; text-align:left; }
+.ranking-row{
+  display:flex; align-items:center; gap:12px; padding: 12px 14px; margin-bottom:8px;
+  border: 2px solid var(--ink); background:#fff; font-family: var(--font-mono);
+}
+.ranking-row.first{ background: var(--orange); color: var(--paper); box-shadow: var(--shadow-card); }
+.ranking-medal{ width: 28px; text-align:center; font-size:1.1rem; }
+.ranking-token{ width:18px; height:18px; border-radius:50%; border:2px solid var(--ink); flex-shrink:0; }
+.ranking-name{ flex:1; font-weight:800; }
+.ranking-cash{ font-weight:800; }
+
+.visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background: var(--ink-soft); }
+::-webkit-scrollbar-track{ background: var(--line); }
+
+@media (prefers-reduced-motion: reduce){ *{ animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header class="masthead">
+    <div>
+      <div class="masthead-title">RETO<br><span class="accent">NARANJA</span></div>
+      <div class="masthead-sub">El tablero de la economía creativa · 2–4 jugadores · retos + calificaciones</div>
+    </div>
+    <div class="masthead-right">
+      <div class="timer-display" id="timerDisplay" style="display:none;">20:00</div>
+      <div class="masthead-tag" id="turnBadge">Configurando partida</div>
+    </div>
+  </header>
+
+  <!-- ============ SETUP SCREEN ============ -->
+  <section class="screen active" id="screen-setup">
+    <div class="setup-card">
+      <div class="setup-intro">
+        Cada jugador inicia con 0 puntos. Recorran el tablero, cumplan retos de
+        economía naranja (cine, música, diseño/moda, videojuegos) en máximo 40
+        segundos y reciban una calificación de 1 a 10 de cada rival (tienen 10
+        segundos para decidirla). La suma de esas notas son tus puntos. Al
+        agotarse el cronómetro de 20 minutos, gana quien tenga más puntos.
+      </div>
+      <label class="setup-section-label">Número de jugadores</label>
+      <div class="player-count-row" id="playerCountRow"></div>
+
+      <label class="setup-section-label">Fichas y nombres</label>
+      <div id="playerSetupRows"></div>
+
+      <button class="btn btn-primary btn-block" id="btnStartGame" style="margin-top:18px; font-size:0.9rem; padding:16px;">
+        Empezar partida →
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <section class="screen" id="screen-game">
+    <div class="game-layout">
+      <div class="board-wrap">
+        <div class="board" id="board"></div>
+      </div>
+
+      <aside class="panel">
+        <div class="panel-card">
+          <div class="panel-title">
+            <span>Jugadores</span>
+            <span>Fondo Comunitario: <span class="pot-value" id="potDisplay">0 pts</span></span>
+          </div>
+          <div id="playerList"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-title">Turno de <span id="currentPlayerName">—</span></div>
+          <div class="dice-area">
+            <div class="die" id="die1"></div>
+            <div class="die" id="die2"></div>
+          </div>
+          <div class="action-row" id="actionRow"></div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-title">Crónica de la partida</div>
+          <div class="log-box" id="logBox"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ WINNER SCREEN ============ -->
+  <section class="screen" id="screen-winner">
+    <div class="winner-screen">
+      <div class="trophy">🏆</div>
+      <h1 id="winnerName" style="font-weight:800;">—</h1>
+      <p style="font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.08em; margin-top:8px; color:var(--ink-soft);">domina la economía creativa</p>
+      <div class="ranking-box" id="rankingList"></div>
+      <button class="btn btn-primary" style="margin-top:26px;" id="btnPlayAgain">Jugar de nuevo</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-backdrop hidden" id="modalBackdrop">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<div id="srAnnouncer" class="visually-hidden" aria-live="polite"></div>
+
+<script src="game-data.js"></script>
+<script src="game-logic.js"></script>
+<script src="game-ui.js"></script>
+</body>
+</html>
